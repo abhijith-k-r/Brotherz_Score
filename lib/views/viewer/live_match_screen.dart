@@ -2,159 +2,296 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../models/match_model.dart';
+import '../../models/ball_event_model.dart';
+import '../../models/player_model.dart';
+import '../../repositories/match_repository.dart';
 
-class LiveMatchScreen extends StatelessWidget {
-  const LiveMatchScreen({super.key});
+class LiveMatchScreen extends StatefulWidget {
+  final String matchId;
+  const LiveMatchScreen({super.key, required this.matchId});
+
+  @override
+  State<LiveMatchScreen> createState() => _LiveMatchScreenState();
+}
+
+class _LiveMatchScreenState extends State<LiveMatchScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.background100,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.neutral400),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/viewer');
-            }
-          },
-        ),
-        actions: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: AppColors.tertiary.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-            child: Row(
-              children: [
-                Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.tertiary, shape: BoxShape.circle)),
-                const SizedBox(width: 4),
-                const Text('LIVE', style: TextStyle(color: AppColors.tertiary, fontSize: 10, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: AppColors.neutral400),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: AppColors.background100,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Eagles CC', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontFamily: 'Inter')),
-                    Text('145/4', style: Theme.of(context).textTheme.headlineMedium),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                     Text('Tigers', style: TextStyle(color: AppColors.neutral500, fontSize: 16, fontWeight: FontWeight.bold)),
-                     Text('Yet to bat', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.neutral500)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Divider(color: AppColors.background300),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RichText(
-                      text: const TextSpan(
-                        style: TextStyle(color: AppColors.neutral400, fontSize: 12, letterSpacing: 1.0),
-                        children: [
-                          TextSpan(text: 'OVERS: '),
-                          TextSpan(text: '15.2', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
-                          TextSpan(text: '/20'),
-                        ],
-                      ),
-                    ),
-                    RichText(
-                      text: const TextSpan(
-                        style: TextStyle(color: AppColors.neutral400, fontSize: 12, letterSpacing: 1.0),
-                        children: [
-                          TextSpan(text: 'CRR: '),
-                          TextSpan(text: '9.54', style: TextStyle(color: AppColors.neutral, fontWeight: FontWeight.bold, fontSize: 14)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                const Text('COMMENTARY', style: TextStyle(color: AppColors.neutral400, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-                const SizedBox(height: 16),
-                _buildCommentaryItem(context, '15.2', '4', 'M. Khan to R. Sharma', 'FOUR runs!', 'Short and wide outside off, Sharma cuts it fiercely past point for a boundary. Beautiful shot!', isBoundary: true),
-                const SizedBox(height: 16),
-                _buildCommentaryItem(context, '15.1', '1', 'M. Khan to V. Kohli', '1 run', 'Tucked away to deep square leg for a single.'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    if (widget.matchId.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Live Match')),
+        body: const Center(child: Text('Invalid Match ID')),
+      );
+    }
+    final repo = context.read<MatchRepository>();
 
-  Widget _buildCommentaryItem(BuildContext context, String over, String run, String bowlerToBatter, String shortDesc, String longDesc, {bool isBoundary = false}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 48,
-          child: Text(over, style: const TextStyle(color: AppColors.neutral300, fontWeight: FontWeight.bold), textAlign: TextAlign.right),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isBoundary ? AppColors.primary.withOpacity(0.2) : AppColors.background200,
-            shape: BoxShape.circle,
-            border: Border.all(color: isBoundary ? AppColors.primary : Colors.transparent),
-          ),
-          alignment: Alignment.center,
-          child: Text(run, style: TextStyle(color: isBoundary ? AppColors.primary : AppColors.neutral300, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.only(bottom: 16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.background200)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(color: AppColors.neutral, fontSize: 14),
+    return StreamBuilder<MatchModel>(
+      stream: repo.watchMatch(widget.matchId),
+      builder: (context, matchSnap) {
+        if (!matchSnap.hasData) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        final match = matchSnap.data!;
+
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: AppColors.background100,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.neutral400),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/viewer');
+                  }
+                },
+              ),
+              title: Text(match.matchName.toUpperCase(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: match.status == 'live' ? AppColors.tertiary.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
                     children: [
-                      TextSpan(text: '$bowlerToBatter, ', style: TextStyle(fontWeight: FontWeight.bold, color: isBoundary ? AppColors.primary : AppColors.neutral)),
-                      TextSpan(text: shortDesc),
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: match.status == 'live' ? AppColors.tertiary : Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        match.status.toUpperCase(),
+                        style: TextStyle(
+                          color: match.status == 'live' ? AppColors.tertiary : Colors.orange,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(longDesc, style: const TextStyle(color: AppColors.neutral400, fontSize: 12, height: 1.5)),
+              ],
+              bottom: TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'LIVE'),
+                  Tab(text: 'LINEUPS'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildLiveTab(context, repo, match),
+                _buildLineupTab(context, repo, match),
               ],
             ),
           ),
+        );
+      }
+    );
+  }
+
+  Widget _buildLiveTab(BuildContext context, MatchRepository repo, MatchModel match) {
+    return StreamBuilder<List<BallEvent>>(
+      stream: repo.watchBallEvents(widget.matchId),
+      builder: (context, runsSnap) {
+        final events = runsSnap.data ?? [];
+        int totalRuns = events.fold(0, (sum, e) => sum + e.totalRuns);
+        int totalWickets = events.where((e) => e.isWicket).length;
+        
+        int legalBalls = events.where((e) => !e.isWide && !e.isNoBall).length;
+        int overs = legalBalls ~/ 6;
+        int balls = legalBalls % 6;
+        
+        double crr = overs > 0 || balls > 0 ? (totalRuns / (overs + (balls / 6))) : 0.0;
+
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: AppColors.background100,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(match.teamAName, style: Theme.of(context).textTheme.titleLarge),
+                      Text('$totalRuns/$totalWickets', style: Theme.of(context).textTheme.headlineMedium),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(match.teamBName, style: const TextStyle(color: AppColors.neutral500, fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text('Yet to bat', style: TextStyle(color: AppColors.neutral500)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(color: AppColors.background300),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('OVERS: $overs.$balls / ${match.overs}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                      Text('CRR: ${crr.toStringAsFixed(2)}', style: const TextStyle(color: AppColors.neutral, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: events.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) return const Padding(padding: EdgeInsets.only(bottom: 16), child: Text('COMMENTARY', style: TextStyle(color: AppColors.neutral400, fontWeight: FontWeight.bold, letterSpacing: 1.5)));
+                  final event = events[events.length - index];
+                  return _buildCommentaryItem(context, event);
+                },
+              ),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  Widget _buildLineupTab(BuildContext context, MatchRepository repo, MatchModel match) {
+    return StreamBuilder<List<PlayerModel>>(
+      stream: repo.watchPlayers(widget.matchId),
+      builder: (context, snap) {
+        if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+        final players = snap.data!;
+        final teamA = players.where((p) => p.teamId == 'A').toList();
+        final teamB = players.where((p) => p.teamId == 'B').toList();
+
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+             _buildTeamLineup(match.teamAName, teamA),
+             const SizedBox(height: 24),
+             _buildTeamLineup(match.teamBName, teamB),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTeamLineup(String teamName, List<PlayerModel> players) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(teamName.toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary, letterSpacing: 1.5)),
+            Text('${players.length} Players', style: const TextStyle(color: AppColors.neutral400, fontSize: 12)),
+          ],
         ),
+        const SizedBox(height: 12),
+        ...players.map((p) => Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: AppColors.background100, borderRadius: BorderRadius.circular(12)),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundImage: p.imageUrl != null ? NetworkImage(p.imageUrl!) : null,
+                child: p.imageUrl == null ? Text(p.name[0], style: const TextStyle(fontSize: 12)) : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(p.role, style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              _buildStatusBadge(p.status),
+            ],
+          ),
+        )),
       ],
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color color = AppColors.neutral400;
+    if (status == 'batting') color = AppColors.tertiary;
+    if (status == 'bowling') color = AppColors.primary;
+    if (status == 'out') color = Colors.red;
+    if (status == 'not_out') color = Colors.green;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+      child: Text(status.toUpperCase(), style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildCommentaryItem(BuildContext context, BallEvent event) {
+    String runText = event.isWicket ? 'W' : event.runs.toString();
+    if (event.isWide) runText += 'wd';
+    if (event.isNoBall) runText += 'nb';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: event.isWicket ? AppColors.tertiary.withOpacity(0.2) : (event.runs >= 4 ? AppColors.primary.withOpacity(0.2) : AppColors.background200),
+              shape: BoxShape.circle,
+              border: Border.all(color: event.isWicket ? AppColors.tertiary : (event.runs >= 4 ? AppColors.primary : Colors.transparent)),
+            ),
+            alignment: Alignment.center,
+            child: Text(runText, style: TextStyle(fontWeight: FontWeight.bold, color: event.isWicket ? AppColors.tertiary : (event.runs >= 4 ? AppColors.primary : AppColors.neutral))),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(event.isWicket ? 'WICKET!' : (event.runs == 6 ? 'SIX!!!' : (event.runs == 4 ? 'FOUR!!' : 'Delivery')), style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${event.totalRuns} runs including extras', style: const TextStyle(color: AppColors.neutral400, fontSize: 12)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

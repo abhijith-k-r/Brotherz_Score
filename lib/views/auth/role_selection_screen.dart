@@ -17,14 +17,23 @@ class RoleSelectionScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('SELECT ROLE', style: Theme.of(context).textTheme.displaySmall, textAlign: TextAlign.center),
+              Text(
+                'SELECT ROLE',
+                style: Theme.of(context).textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
-              Text('Choose your experience', style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+              Text(
+                'Choose your experience',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 40),
               _buildRoleCard(
                 context,
                 title: 'VIEWER',
-                description: 'Watch live matches, track scores, and view detailed player statistics.',
+                description:
+                    'Watch live matches, track scores, and view detailed player statistics.',
                 icon: '👁️',
                 onTap: () => context.go('/viewer'),
               ),
@@ -32,7 +41,8 @@ class RoleSelectionScreen extends StatelessWidget {
               _buildRoleCard(
                 context,
                 title: 'ADMIN',
-                description: 'Manage matches, update live scoring, and control player data.',
+                description:
+                    'Manage matches, update live scoring, and control player data.',
                 icon: '🛡️',
                 isPrimary: true,
                 onTap: () => context.go('/admin-login'),
@@ -44,7 +54,14 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleCard(BuildContext context, {required String title, required String description, required String icon, required VoidCallback onTap, bool isPrimary = false}) {
+  Widget _buildRoleCard(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required String icon,
+    required VoidCallback onTap,
+    bool isPrimary = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -52,10 +69,19 @@ class RoleSelectionScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.background100,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isPrimary ? AppColors.primary : AppColors.background300),
-          boxShadow: isPrimary ? [
-            BoxShadow(color: AppColors.primary.withOpacity(0.15), offset: const Offset(0, 4), blurRadius: 20, spreadRadius: -5)
-          ] : null,
+          border: Border.all(
+            color: isPrimary ? AppColors.primary : AppColors.background300,
+          ),
+          boxShadow: isPrimary
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.15),
+                    offset: const Offset(0, 4),
+                    blurRadius: 20,
+                    spreadRadius: -5,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,10 +92,14 @@ class RoleSelectionScreen extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: isPrimary ? AppColors.primary : AppColors.background200,
+                    color: isPrimary
+                        ? AppColors.primary
+                        : AppColors.background200,
                     shape: BoxShape.circle,
                   ),
-                  child: Center(child: Text(icon, style: const TextStyle(fontSize: 24))),
+                  child: Center(
+                    child: Text(icon, style: const TextStyle(fontSize: 24)),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -81,7 +111,12 @@ class RoleSelectionScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Text(description, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: isPrimary ? AppColors.neutral300 : AppColors.neutral400)),
+            Text(
+              description,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isPrimary ? AppColors.neutral300 : AppColors.neutral400,
+              ),
+            ),
           ],
         ),
       ),

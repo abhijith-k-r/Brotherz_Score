@@ -1,9 +1,13 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:brothers_score/models/match_model.dart';
+import 'package:brothers_score/repositories/match_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/controllers/admin_nav_controller.dart';
+import '../../viewmodels/auth/auth_cubit.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   final bool isRoot;
@@ -33,11 +37,21 @@ class AdminDashboardScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundColor: AppColors.secondary200.withOpacity(0.2),
-              child: const Icon(Icons.settings, color: AppColors.neutral),
+            child: PopupMenuButton<String>(
+              onSelected: (val) {
+                if (val == 'logout') {
+                  context.read<AuthCubit>().logout();
+                }
+              },
+              icon: CircleAvatar(
+                backgroundColor: AppColors.secondary200.withOpacity(0.2),
+                child: const Icon(Icons.settings, color: AppColors.neutral),
+              ),
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'logout', child: Text('Logout')),
+              ],
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -52,7 +66,10 @@ class AdminDashboardScreen extends StatelessWidget {
                 children: [
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 36,
+                      horizontal: 24,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary,
                       borderRadius: BorderRadius.circular(16),
@@ -62,7 +79,7 @@ class AdminDashboardScreen extends StatelessWidget {
                           blurRadius: 24,
                           spreadRadius: -4,
                           offset: const Offset(0, 8),
-                        )
+                        ),
                       ],
                     ),
                     child: Column(
@@ -71,9 +88,7 @@ class AdminDashboardScreen extends StatelessWidget {
                         const SizedBox(height: 12),
                         Text(
                           'CREATE MATCH',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(color: AppColors.background),
                         ),
                         const SizedBox(height: 4),
@@ -119,13 +134,33 @@ class AdminDashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: _buildActionCard(
-                    context,
-                    label: 'LIVE',
-                    emoji: '📊',
-                    color: AppColors.tertiary,
-                    onTap: () => context.push('/live-scoring'),
-                    badge: true,
+                  child: StreamBuilder<List<MatchModel>>(
+                    stream: context.read<MatchRepository>().watchMatches(),
+                    builder: (context, snap) {
+                      final liveMatch = snap.data
+                          ?.where((m) => m.status != 'completed')
+                          .firstOrNull;
+                      return _buildActionCard(
+                        context,
+                        label: 'LIVE',
+                        emoji: '📊',
+                        color: AppColors.tertiary,
+                        onTap: () {
+                          if (liveMatch != null) {
+                            context.push('/live-scoring', extra: liveMatch.id);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'No active match available. Please create one.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        badge: liveMatch?.status == 'live',
+                      );
+                    },
                   ),
                 ),
               ],
@@ -162,10 +197,7 @@ class AdminDashboardScreen extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: wide ? double.infinity : null,
-        padding: EdgeInsets.symmetric(
-          vertical: wide ? 20 : 24,
-          horizontal: 16,
-        ),
+        padding: EdgeInsets.symmetric(vertical: wide ? 20 : 24, horizontal: 16),
         decoration: BoxDecoration(
           color: AppColors.background100,
           borderRadius: BorderRadius.circular(16),
@@ -187,7 +219,10 @@ class AdminDashboardScreen extends StatelessWidget {
                     children: [
                       Text(emoji, style: TextStyle(fontSize: 32, color: color)),
                       const SizedBox(height: 10),
-                      Text(label, style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        label,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ],
                   ),
                   if (badge)

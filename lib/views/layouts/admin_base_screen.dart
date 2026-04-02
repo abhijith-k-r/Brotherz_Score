@@ -15,10 +15,10 @@ class AdminBaseScreen extends StatefulWidget {
 }
 
 class _AdminBaseScreenState extends State<AdminBaseScreen> {
-  static const List<Widget> _screens = [
+  static final List<Widget> _screens = const [
     AdminDashboardScreen(isRoot: true),
     PlayerManagementScreen(isRoot: true),
-    MatchHistoryScreen(isRoot: true),
+    MatchHistoryScreen(isRoot: true, isAdmin: true),
   ];
 
   @override
@@ -54,10 +54,7 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: _screens),
         bottomNavigationBar: _buildBottomNav(context),
       ),
     );
@@ -67,7 +64,9 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background100,
-        border: const Border(top: BorderSide(color: AppColors.background300, width: 0.5)),
+        border: const Border(
+          top: BorderSide(color: AppColors.background300, width: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.4),
@@ -92,7 +91,12 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, int index, IconData icon, String label) {
+  Widget _buildNavItem(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
     final bool isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () => _setTab(index),
@@ -105,7 +109,9 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
           vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(

@@ -12,11 +12,18 @@ import '../../views/admin/live_scoring_screen.dart';
 import '../../views/profile/player_profile_screen.dart';
 import '../../views/matches/full_scorecard_screen.dart';
 
+import '../../viewmodels/auth/auth_cubit.dart';
+import '../../models/player_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 // ─── Shared Transition Builders ─────────────────────────────────────────────
 
 Widget _fadeSlide(
-    BuildContext context, Animation<double> animation,
-    Animation<double> secondary, Widget child) {
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondary,
+  Widget child,
+) {
   return FadeTransition(
     opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
     child: SlideTransition(
@@ -30,8 +37,11 @@ Widget _fadeSlide(
 }
 
 Widget _slideFromRight(
-    BuildContext context, Animation<double> animation,
-    Animation<double> secondary, Widget child) {
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondary,
+  Widget child,
+) {
   return SlideTransition(
     position: Tween<Offset>(
       begin: const Offset(1.0, 0.0),
@@ -42,8 +52,11 @@ Widget _slideFromRight(
 }
 
 Widget _slideFromBottom(
-    BuildContext context, Animation<double> animation,
-    Animation<double> secondary, Widget child) {
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondary,
+  Widget child,
+) {
   return SlideTransition(
     position: Tween<Offset>(
       begin: const Offset(0.0, 1.0),
@@ -58,6 +71,23 @@ Widget _slideFromBottom(
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
+    redirect: (context, state) {
+      final authState = context.read<AuthCubit>().state;
+      final isLoggedIn = authState is AuthAuthenticated && authState.role == 'admin';
+      final goingToAdmin =
+          state.matchedLocation.startsWith('/admin') ||
+          state.matchedLocation.startsWith('/create-match') ||
+          state.matchedLocation.startsWith('/live-scoring');
+      final goingToAdminLogin = state.matchedLocation == '/admin-login';
+
+      if (!isLoggedIn && goingToAdmin) {
+        return '/admin-login';
+      }
+      if (isLoggedIn && goingToAdminLogin) {
+        return '/admin';
+      }
+      return null;
+    },
     routes: [
       // ── App entry ──
       GoRoute(
@@ -114,28 +144,43 @@ class AppRouter {
       GoRoute(
         path: '/live-scoring',
         name: 'liveScoring',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const LiveScoringScreen(),
-          transitionsBuilder: _slideFromRight,
-        ),
+        pageBuilder: (context, state) {
+          final matchId = state.extra as String?;
+          return CustomTransitionPage(
+            child: LiveScoringScreen(matchId: matchId ?? ''),
+            transitionsBuilder: _slideFromRight,
+          );
+        },
       ),
 
       // ── Viewer deep pages ──
       GoRoute(
         path: '/live-match',
         name: 'liveMatch',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const LiveMatchScreen(),
-          transitionsBuilder: _slideFromRight,
-        ),
+        pageBuilder: (context, state) {
+          final matchId = state.extra as String?;
+          if (matchId == null) {
+            return CustomTransitionPage(
+              child: const Scaffold(body: Center(child: Text("Invalid Route: Missing Match ID"))),
+              transitionsBuilder: _slideFromRight,
+            );
+          }
+          return CustomTransitionPage(
+            child: LiveMatchScreen(matchId: matchId),
+            transitionsBuilder: _slideFromRight,
+          );
+        },
       ),
       GoRoute(
         path: '/player-profile',
         name: 'playerProfile',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          child: const PlayerProfileScreen(),
-          transitionsBuilder: _slideFromRight,
-        ),
+        pageBuilder: (context, state) {
+          final player = state.extra as PlayerModel?;
+          return CustomTransitionPage(
+            child: PlayerProfileScreen(player: player ?? const PlayerModel(id: '', matchId: '', teamId: 'A', name: 'Unknown', role: 'Batsman', isStarting11: true, jerseyNumber: 0)),
+            transitionsBuilder: _slideFromRight,
+          );
+        }
       ),
       GoRoute(
         path: '/full-scorecard',

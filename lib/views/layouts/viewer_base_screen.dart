@@ -17,7 +17,7 @@ class _ViewerBaseScreenState extends State<ViewerBaseScreen> {
 
   final List<Widget> _screens = const [
     ViewerDashboardScreen(isRoot: true),
-    MatchHistoryScreen(isRoot: true),
+    MatchHistoryScreen(isRoot: true, isAdmin: false),
   ];
 
   @override
@@ -32,10 +32,7 @@ class _ViewerBaseScreenState extends State<ViewerBaseScreen> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: _screens),
         bottomNavigationBar: _buildBottomNav(),
       ),
     );
@@ -78,7 +75,9 @@ class _ViewerBaseScreenState extends State<ViewerBaseScreen> {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -98,7 +97,7 @@ class _ViewerBaseScreenState extends State<ViewerBaseScreen> {
                   fontSize: 14,
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ),

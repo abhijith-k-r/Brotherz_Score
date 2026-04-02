@@ -1,6 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 
@@ -46,13 +46,15 @@ class _SplashScreenState extends State<SplashScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.background100,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.5),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.primary.withOpacity(0.5),
                         blurRadius: 15,
                         spreadRadius: 2,
-                      )
+                      ),
                     ],
                   ),
                   child: const Center(
@@ -62,17 +64,24 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 24),
                 RichText(
                   text: TextSpan(
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(letterSpacing: 2),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displayMedium?.copyWith(letterSpacing: 2),
                     children: const [
                       TextSpan(text: 'BROTHERS '),
-                      TextSpan(text: 'SCORE', style: TextStyle(color: AppColors.primary)),
+                      TextSpan(
+                        text: 'SCORE',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'YOUR MATCH. YOUR STATS.',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 3),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(letterSpacing: 3),
                 ),
               ],
             ),
