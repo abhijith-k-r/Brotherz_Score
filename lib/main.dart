@@ -4,8 +4,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'viewmodels/auth/auth_cubit.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    //
+  }
   runApp(const BrothersScoreApp());
 }
 

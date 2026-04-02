@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "209489509394",
+    "project_id": "brotherz-score",
+    "storage_bucket": "brotherz-score.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:209489509394:android:c17ea9c26fab8bf2956ccb",
+        "android_client_info": {
+          "package_name": "com.example.brothers_score"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBq37cP5jJo1fjhtyYfyHf0mhmnqkWurwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
