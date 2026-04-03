@@ -39,9 +39,10 @@ class _ViewerBaseScreenState extends State<ViewerBaseScreen> {
   }
 
   Widget _buildBottomNav() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background100,
+        color: isDark ? AppColors.background200 : AppColors.neutral,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),

@@ -4,7 +4,8 @@ import '../models/player_model.dart';
 import '../models/ball_event_model.dart';
 
 class MatchRepository {
-  final _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseFirestore get db => _db;
 
   // ── Match CRUD ─────────────────────────────────────────────────────────────
 
@@ -144,6 +145,7 @@ class MatchRepository {
   }
 
   Stream<List<BallEvent>> watchBallEvents(String matchId) {
+    if (matchId.isEmpty) return Stream.value([]);
     return _db
         .collection('matches')
         .doc(matchId)
@@ -167,5 +169,65 @@ class MatchRepository {
         .where('globalBowlerId', isEqualTo: globalPlayerId)
         .snapshots()
         .map((snap) => snap.docs.map(BallEvent.fromFirestore).toList());
+  }
+
+  Future<List<MatchModel>> getMatchesByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+    // Firestore whereIn has limit of 10-30... If many matches, I'll just fetch separately or via match IDs list.
+    // Let's do simple for now.
+    final List<MatchModel> matches = [];
+    for (var id in ids) {
+      final doc = await _db.collection('matches').doc(id).get();
+      if (doc.exists) matches.add(MatchModel.fromFirestore(doc));
+    }
+    return matches;
+  }
+
+  Future<Map<String, List<BallEvent>>> getGlobalPlayerStats(String globalId) async {
+    // Try to find matches where the player participated using the playerIds array (fast, and index-free for array-contains)
+    final matchSnap = await _db
+        .collection('matches')
+        .where('playerIds', arrayContains: globalId)
+        .get();
+        
+    final List<String> matchIds = matchSnap.docs.map((d) => d.id).toList();
+
+    // If no matches found via playerIds (legacy matches), fetch recent completed matches as fallback
+    if (matchIds.isEmpty) {
+      final legacySnap = await _db
+          .collection('matches')
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .get();
+      matchIds.addAll(legacySnap.docs.map((d) => d.id));
+    }
+
+    final List<BallEvent> allBatting = [];
+    final List<BallEvent> allBowling = [];
+    final List<BallEvent> allFielding = [];
+    final List<BallEvent> allOuts = [];
+
+    // Fetch ball events per match (This is slower but guaranteed to work without index building)
+    for (String mId in matchIds) {
+      final ballEventsRef = _db.collection('matches').doc(mId).collection('ballEvents');
+      
+      // Batch fetches
+      final bat = await ballEventsRef.where('globalStrikerId', isEqualTo: globalId).get();
+      final bowl = await ballEventsRef.where('globalBowlerId', isEqualTo: globalId).get();
+      final field = await ballEventsRef.where('fielderId', isEqualTo: globalId).get();
+      final outs = await ballEventsRef.where('globalWicketPlayerId', isEqualTo: globalId).get();
+      
+      allBatting.addAll(bat.docs.map(BallEvent.fromFirestore));
+      allBowling.addAll(bowl.docs.map(BallEvent.fromFirestore));
+      allFielding.addAll(field.docs.map(BallEvent.fromFirestore));
+      allOuts.addAll(outs.docs.map(BallEvent.fromFirestore));
+    }
+    
+    return {
+      'batting': allBatting,
+      'bowling': allBowling,
+      'fielding': allFielding,
+      'outs': allOuts,
+    };
   }
 }

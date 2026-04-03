@@ -10,6 +10,7 @@ import '../../views/viewer/live_match_screen.dart';
 import '../../views/admin/create_match_screen.dart';
 import '../../views/admin/live_scoring_screen.dart';
 import '../../views/profile/player_profile_screen.dart';
+import '../../views/viewer/all_players_screen.dart';
 import '../../views/matches/full_scorecard_screen.dart';
 
 import '../../viewmodels/auth/auth_cubit.dart';
@@ -78,12 +79,11 @@ class AppRouter {
           state.matchedLocation.startsWith('/admin') ||
           state.matchedLocation.startsWith('/create-match') ||
           state.matchedLocation.startsWith('/live-scoring');
-      final goingToAdminLogin = state.matchedLocation == '/admin-login';
 
       if (!isLoggedIn && goingToAdmin) {
         return '/admin-login';
       }
-      if (isLoggedIn && goingToAdminLogin) {
+      if (isLoggedIn && (state.matchedLocation == '/' || state.matchedLocation == '/role-selection' || state.matchedLocation == '/admin-login')) {
         return '/admin';
       }
       return null;
@@ -181,6 +181,14 @@ class AppRouter {
             transitionsBuilder: _slideFromRight,
           );
         }
+      ),
+      GoRoute(
+        path: '/all-players',
+        name: 'allPlayers',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const AllPlayersScreen(),
+          transitionsBuilder: _slideFromRight,
+        ),
       ),
       GoRoute(
         path: '/full-scorecard',

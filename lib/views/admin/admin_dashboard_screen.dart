@@ -3,11 +3,10 @@
 import 'package:brothers_score/models/match_model.dart';
 import 'package:brothers_score/repositories/match_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/controllers/admin_nav_controller.dart';
-import '../../viewmodels/auth/auth_cubit.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   final bool isRoot;
@@ -34,25 +33,25 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: PopupMenuButton<String>(
-              onSelected: (val) {
-                if (val == 'logout') {
-                  context.read<AuthCubit>().logout();
-                }
-              },
-              icon: CircleAvatar(
-                backgroundColor: AppColors.secondary200.withOpacity(0.2),
-                child: const Icon(Icons.settings, color: AppColors.neutral),
-              ),
-              itemBuilder: (context) => const [
-                PopupMenuItem(value: 'logout', child: Text('Logout')),
-              ],
-            ),
-          ),
-        ],
+        // actions: [
+        //   Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: PopupMenuButton<String>(
+        //       onSelected: (val) {
+        //         if (val == 'logout') {
+        //           context.read<AuthCubit>().logout();
+        //         }
+        //       },
+        //       icon: CircleAvatar(
+        //         backgroundColor: AppColors.secondary200.withOpacity(0.2),
+        //         child: const Icon(Icons.settings, color: AppColors.neutral),
+        //       ),
+        //       itemBuilder: (context) => const [
+        //         PopupMenuItem(value: 'logout', child: Text('Logout')),
+        //       ],
+        //     ),
+        //   ),
+        // ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

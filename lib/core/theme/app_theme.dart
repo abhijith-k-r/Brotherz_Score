@@ -116,4 +116,25 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      brightness: Brightness.light,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: Colors.white,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        error: AppColors.tertiary,
+        surface: Color(0xFFF5F5F5),
+      ),
+      fontFamily: GoogleFonts.inter().fontFamily,
+      textTheme: TextTheme(
+        titleLarge: GoogleFonts.oswald(fontWeight: FontWeight.bold, color: Colors.black87),
+        titleMedium: GoogleFonts.oswald(fontWeight: FontWeight.w600, color: Colors.black87),
+        bodyLarge: GoogleFonts.inter(color: Colors.black87),
+        bodyMedium: GoogleFonts.inter(color: Colors.black87),
+      ),
+    );
+  }
 }

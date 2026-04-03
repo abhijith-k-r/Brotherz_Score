@@ -6,6 +6,7 @@ import '../../core/controllers/admin_nav_controller.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../admin/player_management_screen.dart';
 import '../matches/match_history_screen.dart';
+import '../admin/admin_settings_screen.dart';
 
 class AdminBaseScreen extends StatefulWidget {
   const AdminBaseScreen({super.key});
@@ -19,6 +20,7 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
     AdminDashboardScreen(isRoot: true),
     PlayerManagementScreen(isRoot: true),
     MatchHistoryScreen(isRoot: true, isAdmin: true),
+    AdminSettingsScreen(),
   ];
 
   @override
@@ -77,13 +79,14 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(context, 0, Icons.dashboard_rounded, 'Home'),
               _buildNavItem(context, 1, Icons.people_alt_rounded, 'Players'),
               _buildNavItem(context, 2, Icons.history_rounded, 'History'),
+              _buildNavItem(context, 3, Icons.settings_rounded, 'Settings'),
             ],
           ),
         ),
@@ -123,7 +126,7 @@ class _AdminBaseScreenState extends State<AdminBaseScreen> {
                 icon,
                 key: ValueKey(isSelected),
                 color: isSelected ? AppColors.primary : AppColors.neutral400,
-                size: isSelected ? 26 : 24,
+                size: isSelected ? 26 : 22,
               ),
             ),
             AnimatedSize(

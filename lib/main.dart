@@ -7,6 +7,7 @@ import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'viewmodels/auth/auth_cubit.dart';
 import 'viewmodels/match/match_cubit.dart';
+import 'viewmodels/theme_cubit.dart';
 import 'repositories/match_repository.dart';
 
 void main() async {
@@ -34,12 +35,19 @@ class BrothersScoreApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => AuthCubit()..checkCurrentUser()),
           BlocProvider(create: (context) => MatchCubit(context.read<MatchRepository>())),
+          BlocProvider(create: (context) => ThemeCubit()),
         ],
-        child: MaterialApp.router(
-          title: 'Brothers Score',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          routerConfig: AppRouter.router,
+        child: BlocBuilder<ThemeCubit, ThemeMode>(
+          builder: (context, mode) {
+            return MaterialApp.router(
+              title: 'Brothers Score',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: mode,
+              routerConfig: AppRouter.router,
+            );
+          },
         ),
       ),
     );

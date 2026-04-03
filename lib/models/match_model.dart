@@ -11,6 +11,8 @@ class MatchModel {
   final String tossWinner; // 'A' or 'B'
   final String tossDecision; // 'bat' or 'bowl'
   final int currentInnings; // 1 or 2
+  final String? winnerTeamId;
+  final int? targetRuns;
 
   const MatchModel({
     required this.id,
@@ -22,8 +24,22 @@ class MatchModel {
     this.tossWinner = 'A',
     this.tossDecision = 'bat',
     this.currentInnings = 1,
+    this.winnerTeamId,
+    this.targetRuns,
+    this.playerIds = const [],
     required this.createdAt,
   });
+
+  final List<String> playerIds;
+
+  String get battingTeam {
+    bool teamABatsFirst = (tossWinner == 'A' && tossDecision == 'bat') || (tossWinner == 'B' && tossDecision == 'bowl');
+    if (currentInnings == 1) {
+      return teamABatsFirst ? 'A' : 'B';
+    } else {
+      return teamABatsFirst ? 'B' : 'A';
+    }
+  }
 
   factory MatchModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -37,21 +53,27 @@ class MatchModel {
       tossWinner: data['tossWinner'] ?? 'A',
       tossDecision: data['tossDecision'] ?? 'bat',
       currentInnings: data['currentInnings'] ?? 1,
+      winnerTeamId: data['winnerTeamId'],
+      targetRuns: data['targetRuns'],
+      playerIds: List<String>.from(data['playerIds'] ?? []),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-      'matchName': matchName,
-      'teamAName': teamAName,
-      'teamBName': teamBName,
-      'overs': overs,
-      'status': status,
-      'tossWinner': tossWinner,
-      'tossDecision': tossDecision,
-      'currentInnings': currentInnings,
-      'createdAt': Timestamp.fromDate(createdAt),
-    };
+    'matchName': matchName,
+    'teamAName': teamAName,
+    'teamBName': teamBName,
+    'overs': overs,
+    'status': status,
+    'tossWinner': tossWinner,
+    'tossDecision': tossDecision,
+    'currentInnings': currentInnings,
+    'winnerTeamId': winnerTeamId,
+    'targetRuns': targetRuns,
+    'playerIds': playerIds,
+    'createdAt': Timestamp.fromDate(createdAt),
+  };
 
   MatchModel copyWith({
     String? matchName,
@@ -62,6 +84,8 @@ class MatchModel {
     String? tossWinner,
     String? tossDecision,
     int? currentInnings,
+    String? winnerTeamId,
+    int? targetRuns,
   }) {
     return MatchModel(
       id: id,
@@ -73,6 +97,8 @@ class MatchModel {
       tossWinner: tossWinner ?? this.tossWinner,
       tossDecision: tossDecision ?? this.tossDecision,
       currentInnings: currentInnings ?? this.currentInnings,
+      winnerTeamId: winnerTeamId ?? this.winnerTeamId,
+      targetRuns: targetRuns ?? this.targetRuns,
       createdAt: createdAt,
     );
   }

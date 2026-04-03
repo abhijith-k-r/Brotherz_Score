@@ -18,8 +18,9 @@ class BallEvent {
   final String bowlerId;
   final String? globalStrikerId;
   final String? globalBowlerId;
-  final String? fielderId; // For catches/run outs
-  final String? wicketType; // bowled, caught, etc.
+  final String? globalWicketPlayerId; // The player who actually got out
+  final String? fielderId; // For catches/run outs (global ID)
+  final String? wicketType; // bowled, caught, run out, stumped, lbw, hit wicket, retired
   final DateTime recordedAt;
 
   const BallEvent({
@@ -40,6 +41,7 @@ class BallEvent {
     required this.bowlerId,
     this.globalStrikerId,
     this.globalBowlerId,
+    this.globalWicketPlayerId,
     this.fielderId,
     this.wicketType,
     required this.recordedAt,
@@ -70,6 +72,7 @@ class BallEvent {
       bowlerId: d['bowlerId'] ?? '',
       globalStrikerId: d['globalStrikerId'],
       globalBowlerId: d['globalBowlerId'],
+      globalWicketPlayerId: d['globalWicketPlayerId'],
       fielderId: d['fielderId'],
       wicketType: d['wicketType'],
       recordedAt: (d['recordedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -93,6 +96,7 @@ class BallEvent {
     'bowlerId': bowlerId,
     'globalStrikerId': globalStrikerId,
     'globalBowlerId': globalBowlerId,
+    'globalWicketPlayerId': globalWicketPlayerId,
     'fielderId': fielderId,
     'wicketType': wicketType,
     'recordedAt': Timestamp.fromDate(recordedAt),

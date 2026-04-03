@@ -16,7 +16,6 @@ class MatchHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.background100,
         leading: isRoot
             ? null
             : IconButton(
@@ -65,7 +64,6 @@ class MatchHistoryScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.background100,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.background200),
                     ),
@@ -116,9 +114,11 @@ class MatchHistoryScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              match.teamAName,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontFamily: 'Inter'),
+                            Expanded(
+                              child: Text(
+                                match.teamAName,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontFamily: 'Inter'),
+                              ),
                             ),
                             Text(
                                isAdmin && !isCompleted ? 'Continue Scoring' : 'Tap to view',

@@ -1,11 +1,11 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../../core/services/cloudinary_service.dart';
 import '../../core/constants/app_colors.dart';
 import '../../viewmodels/match/match_cubit.dart';
 import '../../viewmodels/match/match_state.dart';
@@ -23,13 +23,11 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
 
-  // Step 1 Controllers
   final _matchNameCtrl = TextEditingController();
   final _teamACtrl = TextEditingController();
   final _teamBCtrl = TextEditingController();
   final _oversCtrl = TextEditingController();
 
-  // Step 2 & 3 state (Players added locally before submitting the step)
   final List<PlayerModel> _localTeamAPlayers = [];
   final List<PlayerModel> _localTeamBPlayers = [];
 
@@ -101,6 +99,7 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
       context.read<MatchCubit>().saveMatch();
     }
   }
+
   void _addPlayerModal(bool isTeamA) {
     showModalBottomSheet(
       context: context,
@@ -146,45 +145,87 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             return Column(
               children: [
                 const SizedBox(height: 12),
-                Container(width: 48, height: 4, decoration: BoxDecoration(color: AppColors.background300, borderRadius: BorderRadius.circular(2))),
+                Container(
+                  width: 48,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.background300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
                 const SizedBox(height: 16),
-                const Text('SELECT FROM DIRECTORY', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                const Text(
+                  'SELECT FROM DIRECTORY',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: StreamBuilder<List<PlayerModel>>(
                     stream: repo.watchGlobalPlayers(),
                     builder: (context, snap) {
-                      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                      if (!snap.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
                       final players = snap.data!;
-                      if (players.isEmpty) return const Center(child: Text('Directory is empty'));
-                      
+                      if (players.isEmpty) {
+                        return const Center(child: Text('Directory is empty'));
+                      }
+
                       return ListView.builder(
                         controller: scrollController,
                         itemCount: players.length,
                         itemBuilder: (context, index) {
                           final p = players[index];
-                          final isAlreadyAdded = (isTeamA ? _localTeamAPlayers : _localTeamBPlayers).any((lp) => lp.name == p.name);
-
+                          final isAlreadyAdded =
+                              (isTeamA
+                                      ? _localTeamAPlayers
+                                      : _localTeamBPlayers)
+                                  .any((lp) => lp.name == p.name);
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundImage: p.imageUrl != null ? NetworkImage(p.imageUrl!) : null,
-                              child: p.imageUrl == null ? Text(p.name[0]) : null,
+                              backgroundImage: p.imageUrl != null
+                                  ? NetworkImage(p.imageUrl!)
+                                  : null,
+                              child: p.imageUrl == null
+                                  ? Text(p.name[0])
+                                  : null,
                             ),
                             title: Text(p.name),
                             subtitle: Text(p.role),
-                            trailing: isAlreadyAdded 
-                              ? const Icon(Icons.check_circle, color: AppColors.primary)
-                              : const Icon(Icons.add_circle_outline, color: AppColors.neutral400),
-                            onTap: isAlreadyAdded ? null : () {
-                              setState(() {
-                                if (isTeamA) {
-                                  _localTeamAPlayers.add(p.copyWith(teamId: 'A', globalPlayerId: p.id));
-                                } else {
-                                  _localTeamBPlayers.add(p.copyWith(teamId: 'B', globalPlayerId: p.id));
-                                }
-                              });
-                              Navigator.pop(ctx);
-                            },
+                            trailing: isAlreadyAdded
+                                ? const Icon(
+                                    Icons.check_circle,
+                                    color: AppColors.primary,
+                                  )
+                                : const Icon(
+                                    Icons.add_circle_outline,
+                                    color: AppColors.neutral400,
+                                  ),
+                            onTap: isAlreadyAdded
+                                ? null
+                                : () {
+                                    setState(() {
+                                      if (isTeamA) {
+                                        _localTeamAPlayers.add(
+                                          p.copyWith(
+                                            teamId: 'A',
+                                            globalPlayerId: p.id,
+                                          ),
+                                        );
+                                      } else {
+                                        _localTeamBPlayers.add(
+                                          p.copyWith(
+                                            teamId: 'B',
+                                            globalPlayerId: p.id,
+                                          ),
+                                        );
+                                      }
+                                    });
+                                    Navigator.pop(ctx);
+                                  },
                           );
                         },
                       );
@@ -195,10 +236,9 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             );
           },
         );
-      }
+      },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -228,42 +268,11 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 );
                 setState(() => _currentStep--);
               } else {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/admin');
-                }
+                context.canPop() ? context.pop() : context.go('/admin');
               }
             },
           ),
           title: const Text('SETUP MATCH'),
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(40),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 8,
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    left: 12,
-                    right: 12,
-                    child: Container(height: 2, color: AppColors.background300),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildStepIndicator(1, isActive: _currentStep >= 0),
-                      _buildStepIndicator(2, isActive: _currentStep >= 1),
-                      _buildStepIndicator(3, isActive: _currentStep >= 2),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
         ),
         body: BlocBuilder<MatchCubit, MatchState>(
           builder: (context, state) {
@@ -359,11 +368,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             'Add Players for $teamName',
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Remaining Starting 11: ${11 - localPlayers.where((p) => p.isStarting11).length}',
-            style: const TextStyle(color: AppColors.neutral400),
-          ),
           const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
@@ -405,7 +409,10 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => _addPlayerModal(isA),
                   icon: const Icon(Icons.person_add, size: 18),
-                  label: const Text('NEW PLAYER', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'NEW PLAYER',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary),
                     foregroundColor: AppColors.primary,
@@ -417,7 +424,10 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => _showDirectoryPicker(isA),
                   icon: const Icon(Icons.folder_shared, size: 18),
-                  label: const Text('FROM DIRECTORY', style: TextStyle(fontSize: 12)),
+                  label: const Text(
+                    'FROM DIRECTORY',
+                    style: TextStyle(fontSize: 12),
+                  ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary),
                     foregroundColor: AppColors.primary,
@@ -432,35 +442,6 @@ class _CreateMatchScreenState extends State<CreateMatchScreen> {
             child: Text(isA ? 'NEXT: ADD TEAM B' : 'FINISH & START SCORING'),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStepIndicator(int step, {bool isActive = false}) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.primary : AppColors.background300,
-        shape: BoxShape.circle,
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.5),
-                  blurRadius: 10,
-                ),
-              ]
-            : null,
-      ),
-      child: Center(
-        child: Text(
-          step.toString(),
-          style: TextStyle(
-            color: isActive ? AppColors.background : AppColors.neutral400,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
       ),
     );
   }
@@ -497,37 +478,13 @@ class _AddPlayerModalContentState extends State<_AddPlayerModalContent> {
       imageQuality: 70,
     );
     if (file == null) return;
-
     setState(() => _isUploading = true);
     try {
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse('https://api.cloudinary.com/v1_1/demo/image/upload'),
-      );
-      request.fields['upload_preset'] =
-          'unsigned_preset'; // Requires a real cloudinary preset to work
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
-
-      // Note: We bypass real network upload here for client demo purposes if they haven't provided env vars.
-      // Assuming a mock or silent catch if fails.
-      final response = await request.send();
-      if (response.statusCode == 200) {
-        final resStr = await response.stream.bytesToString();
-        final jsonResponse = json.decode(resStr);
-        setState(() => _uploadedUrl = jsonResponse['secure_url']);
-      } else {
-        // Fallback for tests if demo URL fails
-        setState(
-          () => _uploadedUrl =
-              'https://i.pravatar.cc/150?u=${DateTime.now().millisecondsSinceEpoch}',
-        );
+      final cloudUrl = await CloudinaryService.uploadImage(File(file.path));
+      if (cloudUrl != null) {
+        setState(() => _uploadedUrl = cloudUrl);
       }
     } catch (_) {
-      // Fallback
-      setState(
-        () => _uploadedUrl =
-            'https://i.pravatar.cc/150?u=${DateTime.now().millisecondsSinceEpoch}',
-      );
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -535,6 +492,17 @@ class _AddPlayerModalContentState extends State<_AddPlayerModalContent> {
 
   @override
   Widget build(BuildContext context) {
+    final roles = [
+      'Batsman',
+      'Bowler',
+      'Pace Bowler',
+      'Spin Bowler',
+      'All-rounder',
+      'Wicket Keeper',
+      'WK/Batsman',
+    ];
+    if (!roles.contains(_role)) _role = roles.first;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -542,121 +510,111 @@ class _AddPlayerModalContentState extends State<_AddPlayerModalContent> {
         right: 24,
         top: 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.background300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'ADD NEW PLAYER',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 24),
-          GestureDetector(
-            onTap: _isUploading ? null : _pickAndUploadImage,
-            child: Container(
-              width: 80,
-              height: 80,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 4,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.background200,
-                border: Border.all(
-                  color: AppColors.primary,
-                  style: BorderStyle.solid,
-                ),
-                image: _uploadedUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(_uploadedUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
+                color: AppColors.background300,
+                borderRadius: BorderRadius.circular(2),
               ),
-              child: _isUploading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'ADD NEW PLAYER',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: _isUploading ? null : _pickAndUploadImage,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.background200,
+                  border: Border.all(color: AppColors.primary),
+                  image: _uploadedUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(_uploadedUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: _isUploading
+                    ? const Center(
                         child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : _uploadedUrl == null
-                  ? const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.camera_alt, color: AppColors.primary),
-                        Text(
-                          'UPLOAD',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 8,
+                      )
+                    : (_uploadedUrl == null
+                          ? const Icon(
+                              Icons.camera_alt,
+                              color: AppColors.primary,
+                            )
+                          : null),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(labelText: 'FULL NAME'),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'ROLE'),
+                    value: _role,
+                    items: roles
+                        .map(
+                          (e) => DropdownMenuItem(
+                            value: e,
+                            child: Text(e, overflow: TextOverflow.ellipsis),
                           ),
-                        ),
-                      ],
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _nameCtrl,
-            decoration: const InputDecoration(labelText: 'FULL NAME'),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'ROLE'),
-                  value: _role,
-                  items: ['Batsman', 'Bowler', 'Pace Bowler', 'Spin Bowler', 'All-rounder', 'Wicket Keeper', 'WK/Batsman']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _role = v!),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _role = v!),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: TextField(
-                  controller: _jerseyCtrl,
-                  decoration: const InputDecoration(labelText: 'JERSEY NO.'),
-                  keyboardType: TextInputType.number,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _jerseyCtrl,
+                    decoration: const InputDecoration(labelText: 'JERSEY NO.'),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_nameCtrl.text.isEmpty) return;
-                final player = PlayerModel(
-                  id: '', // Will be assigned by Firestore
-                  matchId: '', // Will be assigned when match is created
-                  teamId: widget.isTeamA ? 'A' : 'B',
-                  name: _nameCtrl.text,
-                  role: _role,
-                  imageUrl: _uploadedUrl,
-                  isStarting11:
-                      widget.existingCount <
-                      11, // First 11 are starting 11 automatically
-                  jerseyNumber: int.tryParse(_jerseyCtrl.text) ?? 0,
-                );
-                widget.onSave(player);
-                context.pop();
-              },
-              child: const Text('SAVE PLAYER'),
+              ],
             ),
-          ),
-          const SizedBox(height: 48),
-        ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_nameCtrl.text.isEmpty) return;
+                  final player = PlayerModel(
+                    id: '',
+                    matchId: '',
+                    teamId: widget.isTeamA ? 'A' : 'B',
+                    name: _nameCtrl.text,
+                    role: _role,
+                    imageUrl: _uploadedUrl,
+                    isStarting11: widget.existingCount < 11,
+                    jerseyNumber: int.tryParse(_jerseyCtrl.text) ?? 0,
+                  );
+                  widget.onSave(player);
+                  context.pop();
+                },
+                child: const Text('SAVE PLAYER'),
+              ),
+            ),
+            const SizedBox(height: 48),
+          ],
+        ),
       ),
     );
   }
