@@ -29,8 +29,8 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           // Background
           Positioned.fill(
-            child: Image.network(
-              'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=800&q=80',
+            child: Image.asset(
+              'assets/splash_Screen.avif',
               fit: BoxFit.cover,
               color: AppColors.background.withOpacity(0.8),
               colorBlendMode: BlendMode.darken,
